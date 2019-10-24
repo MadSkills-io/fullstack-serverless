@@ -335,8 +335,8 @@ class ServerlessFullstackPlugin {
         this.prepareSinglePageApp(resources.Resources);
         this.prepareS3(resources.Resources);
         this.prepareMinimumProtocolVersion(distributionConfig);
-        this.prepareCompressWebContent(distributionConfig);
-
+        this.prepareDefaultCacheBehavior(distributionConfig);
+        this.prepareCacheBehaviors(distributionConfig);
     }
 
     prepareLogging(distributionConfig) {
@@ -505,10 +505,23 @@ class ServerlessFullstackPlugin {
         resources.WebAppS3Bucket.Properties.WebsiteConfiguration.ErrorDocument = errorDocument;
     }
 
-    prepareCompressWebContent(distributionConfig) {
+    prepareDefaultCacheBehavior(distributionConfig) {
+        const defaultCacheBehavior = this.getConfig('defaultCacheBehavior', {})
         const compressWebContent = this.getConfig('compressWebContent', true);
 
-        distributionConfig.DefaultCacheBehavior.Compress = compressWebContent;
+        distributionConfig.DefaultCacheBehavior = Object.assign({},
+            distributionConfig.DefaultCacheBehavior,
+            defaultCacheBehavior,
+            { Compress: compressWebContent }
+        );
+    }
+
+    prepareCacheBehaviors(distributionConfig) {
+        const cacheBehaviors = this.getConfig('cacheBehaviors', undefined)
+
+        if (cacheBehaviors != null) {
+            distributionConfig.CacheBehaviors = cacheBehaviors
+        }
     }
 
     getBucketName(bucketName) {

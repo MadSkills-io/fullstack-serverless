@@ -6,7 +6,7 @@
 [![npm downloads](https://img.shields.io/npm/dt/fullstack-serverless.svg?style=flat)](https://www.npmjs.com/package/fullstack-serverless)
 
 A [serverless](http://www.serverless.com) plugin that automatically creates an AWS CloudFront distribution that serves static web content from S3 and optionally routes API traffic
-to API Gateway.  
+to API Gateway.
 
 Home page - https://www.madskills.io/fullstack-serverless/
 
@@ -65,7 +65,7 @@ custom:
     singlePageApp: false                       # If true 403 errors will be rerouted (missing assets) to your root index document to support single page apps like React and Angular where the js framework handles routing
     compressWebContent: true                   # Use compression when serving web content
     apiPath: api                               # The path prefix for your API Gateway lambdas. The path for the lambda http event trigger needs to start with this too eg. api/myMethod
-    apiGatewayRestApiId: a12bc34df5            # If "Api Gateway Rest Api" is not part of the same serverless template, you can set your API id here 
+    apiGatewayRestApiId: a12bc34df5            # If "Api Gateway Rest Api" is not part of the same serverless template, you can set your API id here
     clientCommand: gulp dist                   # Command to generate the client assets. Defaults to doing nothing
     clientSrcPath: client                      # The path to where you want to run the clientCommand
     waf: 00000000-0000-0000-0000-000000000000  # ID of the Web Application Firewall. Defaults to not used
@@ -192,7 +192,7 @@ custom:
 ```
 
 This is only needed if "Api Gateway Rest Api" is not part of the same serverless template and the API id is not defined in [provider -> apiGateway](https://serverless.com/framework/docs/providers/aws/events/apigateway/#share-api-gateway-and-api-resources) section.
-The id can be found in API Gateway url. For example, if your Rest API url is `https://a12bc34df5.execute-api.eu-central-1.amazonaws.com`, API id will be `a12bc34df5`. 
+The id can be found in API Gateway url. For example, if your Rest API url is `https://a12bc34df5.execute-api.eu-central-1.amazonaws.com`, API id will be `a12bc34df5`.
 
 ---
 
@@ -271,7 +271,7 @@ The name of your error document inside your `distributionFolder`. This is the fi
 
 ---
 
-**objectHeaders** 
+**objectHeaders**
 
 _optional_, no default
 
@@ -296,9 +296,9 @@ custom:
     ...
 ```
 
-Use the `objectHeaders` option to set HTTP response headers be sent to clients requesting uploaded files from your website. 
+Use the `objectHeaders` option to set HTTP response headers be sent to clients requesting uploaded files from your website.
 
-Headers may be specified globally for all files in the bucket by adding a `name`, `value` pair to the `ALL_OBJECTS` property of the `objectHeaders` option. They may also be specified for specific folders or files within your site by specifying properties with names like `specific-directory/` (trailing slash required to indicate folder) or `specific-file.ext`, where the folder and/or file paths are relative to `distributionFolder`. 
+Headers may be specified globally for all files in the bucket by adding a `name`, `value` pair to the `ALL_OBJECTS` property of the `objectHeaders` option. They may also be specified for specific folders or files within your site by specifying properties with names like `specific-directory/` (trailing slash required to indicate folder) or `specific-file.ext`, where the folder and/or file paths are relative to `distributionFolder`.
 
 Headers with more specificity will take precedence over more general ones. For instance, if 'Cache-Control' was set to 'max-age=100' in `ALL_OBJECTS` and to 'max-age=500' in `my/folder/`, the files in `my/folder/` would get a header of 'Cache-Control: max-age=500'.
 
@@ -317,7 +317,7 @@ custom:
 ```
 
 If true 403 errors will be rerouted (missing assets) to your root index document to support single page apps like React and Angular where the js framework handles routing
-    
+
 ---
 
 **compressWebContent**
@@ -332,8 +332,39 @@ custom:
     ...
 ```
 
+---
+
+**defaultCacheBehavior**
+
+_optional_, default: `not set`
+
+```yaml
+custom:
+  fullstack:
+    ...
+    defaultCacheBehavior:
+      MinTTL: 3600
+    ...
+```
+
+---
+
+**cacheBehaviors**
+
+_optional_, default: `not set`
+
+```yaml
+custom:
+  fullstack:
+    ...
+    cacheBehaviors:
+       - MinTTL: 3600
+         DefaultTTL: 3600
+    ...
+```
+
 Instruct CloudFront to use compression when serving web content, see [Serving Compressed Files](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/ServingCompressedFiles.html) in the Amazon CloudFront Developer Guide.
-    
+
 ---
 
 **clientCommand**
@@ -349,7 +380,7 @@ custom:
 ```
 
 Command to generate the client assets. Defaults to doing nothing
-       
+
 ---
 
 **clientSrcPath**
@@ -364,8 +395,8 @@ custom:
     ...
 ```
 
-The path to where you want to run the `clientCommand`    
-       
+The path to where you want to run the `clientCommand`
+
 ---
 
 **waf**
@@ -381,7 +412,7 @@ custom:
 ```
 
 [Web Application Firewall](https://aws.amazon.com/waf/) support - enable AWS WAF to protect your API from security threats
-         
+
 ---
 
 **logging**
@@ -399,7 +430,7 @@ custom:
 ```
 
 Real world [access log](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/AccessLogs.html) - out of the box, API Gateway currently does not provide any kind of real "apache-like" access logs for your invocations
-         
+
 ---
 
 **priceClass**
@@ -500,7 +531,7 @@ Use this parameter if you do not want to invalidate the CloudFront distribution.
 - [hakimio](https://github.com/hakimio)
 
 ## Credits
-Forked from the [**serverless-api-cloudfront**](https://github.com/Droplr/serverless-api-cloudfront/)  
-Borrowed heavily from the [**serverless-finch**](https://github.com/fernando-mc/serverless-finch/)  
-Initial CloudFormation template from [**Full Stack Serverless Web Apps with AWS**](https://medium.com/99xtechnology/full-stack-serverless-web-apps-with-aws-189d87da024a/)  
+Forked from the [**serverless-api-cloudfront**](https://github.com/Droplr/serverless-api-cloudfront/)
+Borrowed heavily from the [**serverless-finch**](https://github.com/fernando-mc/serverless-finch/)
+Initial CloudFormation template from [**Full Stack Serverless Web Apps with AWS**](https://medium.com/99xtechnology/full-stack-serverless-web-apps-with-aws-189d87da024a/)
 Inspiration from [**serverless-stack.com**](https://serverless-stack.com/)
