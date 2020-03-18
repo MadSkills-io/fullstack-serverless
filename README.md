@@ -27,6 +27,29 @@ Home page - https://www.madskills.io/fullstack-serverless/
 npm install -g serverless
 ```
 * [Setup an AWS account and configure access](https://serverless.com/framework/docs/providers/aws/guide/credentials/)
+* Configure the least privilege IAM permissions
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "fullstack-serverless",
+            "Effect": "Allow",
+            "Action": [
+                "cloudfront:GetDistribution",
+                "cloudfront:TagResource",
+                "cloudfront:GetInvalidation",
+                "cloudfront:UpdateDistribution",
+                "cloudfront:CreateDistribution",
+                "cloudfront:DeleteDistribution",
+                "cloudfront:CreateInvalidation",
+                "cloudfront:UntagResource"
+            ],
+            "Resource": "arn:aws:cloudfront::*:distribution/*"
+        }
+    ]
+}
+```
 
 ## Getting started
 **First**, Install and configure
