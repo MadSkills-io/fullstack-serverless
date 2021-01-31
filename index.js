@@ -346,7 +346,7 @@ class ServerlessFullstackPlugin {
         this.prepareComment(distributionConfig);
         this.prepareCertificate(distributionConfig);
         this.prepareWaf(distributionConfig);
-        this.prepareSinglePageApp(resources.Resources);
+        this.prepareSiteAccess(resources.Resources);
         this.prepareS3(resources.Resources);
         this.prepareMinimumProtocolVersion(distributionConfig);
         this.prepareDefaultCacheBehavior(distributionConfig);
@@ -452,9 +452,11 @@ class ServerlessFullstackPlugin {
         }
     }
 
-    prepareSinglePageApp(resources) {
+    prepareSiteAccess(resources) {
         const distributionConfig = resources.ApiDistribution.Properties.DistributionConfig;
         const isSinglePageApp = this.getConfig('singlePageApp', false);
+        const isS3Private = this.getConfig('restrictS3Access', false);
+
         if (isSinglePageApp) {
             this.serverless.cli.log(`Configuring distribution for single page web app...`);
             const indexDocument = this.getConfig('indexDocument', 'index.html')
@@ -478,8 +480,29 @@ class ServerlessFullstackPlugin {
                     delete origin.CustomOriginConfig;
                 }
             }
+        } else if (isS3Private) {
+            this.serverless.cli.log(`Configuring distribution to be the only access point...`);
+
+            const restrictedCustomErrorResponses = this.getConfig('restrictS3ErrorResponses', []);
+            const errorResponseTemplate = distributionConfig.CustomErrorResponses[0];
+            distributionConfig.CustomErrorResponses = _.map(restrictedCustomErrorResponses, (customResponse) => {
+                return { ...errorResponseTemplate, ...customResponse};
+            })
+
+            // Remove direct public read access to bucket, all requests must go through CloudFront
+            const statements = resources.WebAppS3BucketPolicy.Properties.PolicyDocument.Statement;
+            resources.WebAppS3BucketPolicy.Properties.PolicyDocument.Statement = _.filter(statements, (statement) => {
+                return statement.Sid !== 'AllowPublicRead';
+            });
+
+            for (let origin of distributionConfig.Origins) {
+                if (origin.Id === 'WebApp') {
+                    delete origin.CustomOriginConfig;
+                }
+            }
         } else {
             delete distributionConfig.CustomErrorResponses;
+
             delete resources.S3OriginAccessIdentity;
 
             // Remove API access to S3 bucket since all content will be served through http
