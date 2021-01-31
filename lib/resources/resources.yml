@@ -136,6 +136,21 @@ Resources:
             TargetOriginId: ApiGateway
             ViewerProtocolPolicy: https-only
             PathPattern: api/*
+          - AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+            ## Compress web content: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/ServingCompressedFiles.html
+            Compress: true
+            ## The origin id defined above
+            TargetOriginId: RestrictedPathTemplate
+            ## Defining if and how the QueryString and Cookies are forwarded to the origin which in this case is S3
+            ForwardedValues:
+              QueryString: 'false'
+              Cookies:
+                Forward: none
+            ## The protocol that users can use to access the files in the origin. To allow HTTP use `allow-all`
+            ViewerProtocolPolicy: redirect-to-https
         ViewerCertificate:
           AcmCertificateArn: arn
           SslSupportMethod: sni-only

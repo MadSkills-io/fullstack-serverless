@@ -347,6 +347,7 @@ class ServerlessFullstackPlugin {
         this.prepareCertificate(distributionConfig);
         this.prepareWaf(distributionConfig);
         this.prepareSinglePageApp(resources.Resources);
+        this.prepareRestrictedPaths(distributionConfig);
         this.prepareS3(resources.Resources);
         this.prepareMinimumProtocolVersion(distributionConfig);
         this.prepareDefaultCacheBehavior(distributionConfig);
@@ -508,6 +509,28 @@ class ServerlessFullstackPlugin {
                     }
                 }
             }
+        }
+    }
+
+    prepareRestrictedPaths(distributionConfig) {
+        const restrictedPaths = this.getConfig('restrictedPaths', null);
+
+        const behaviorTemplate = _.find(distributionConfig.CacheBehaviors, (cacheBehavior => {
+            return cacheBehavior.TargetOriginId === 'RestrictedPathTemplate';
+        }));
+
+        //Remove template
+        distributionConfig.CacheBehaviors = _.filter(distributionConfig.CacheBehaviors, (cacheBehavior => {
+            return cacheBehavior.TargetOriginId !== 'RestrictedPathTemplate';
+        }));
+
+        if (restrictedPaths !== null) {
+            this.serverless.cli.log(`Configuring distribution for restricted paths...`);
+            distributionConfig.CacheBehaviors = distributionConfig.CacheBehaviors
+                .concat(_.map(restrictedPaths, (restrictedPath) => {
+                    return { ...behaviorTemplate, ...restrictedPath, TargetOriginId: 'WebApp',
+                        TrustedSigners: [].concat(restrictedPath.TrustedSigners) };
+                }));
         }
     }
 
