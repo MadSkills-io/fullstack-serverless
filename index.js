@@ -11,7 +11,9 @@ const Confirm = require('prompt-confirm');
 const bucketUtils = require('./lib/bucketUtils');
 const uploadDirectory = require('./lib/upload');
 const validateClient = require('./lib/validate');
-const invalidateCloudfrontDistribution = require('./lib/cloudFront');
+const {invalidateCloudfrontDistribution} = require('./lib/cloudFront');
+const {addCloudFrontAlias, setupCertificate} = require('./lib/route53');
+const {getCertificateArn} = require('./lib/acm');
 
 class ServerlessFullstackPlugin {
     constructor(serverless, cliOptions) {
@@ -257,7 +259,9 @@ class ServerlessFullstackPlugin {
         });
 
         this.prepareResources(resources);
-        return _.merge(baseResources, resources);
+        return this.setupDomainAndCert(resources).then(() => {
+            return _.merge(baseResources, resources);
+        });
     }
 
     checkForApiGataway() {
@@ -333,6 +337,35 @@ class ServerlessFullstackPlugin {
 
         this.serverless.cli.consoleLog(chalk.yellow('CloudFront domain name'));
         this.serverless.cli.consoleLog(`  ${apiDistributionDomain.OutputValue} (CNAME: ${cnameDomain})`);
+    }
+
+    async setupDomainAndCert(resources) {
+        const certificate = this.getConfig("certificate", null);
+        const distributionCertificate = resources.Resources.ApiDistribution.Properties.DistributionConfig.ViewerCertificate;
+    
+        if (this.options.domain) {
+            if (this.getConfig("route53", false)) {
+                await addCloudFrontAlias(
+                    this.serverless,
+                    this.options.domain
+                );
+                // only create and override if not specified
+                if (certificate === null) {
+                    distributionCertificate.AcmCertificateArn = await setupCertificate(
+                        this.serverless,
+                        this.options.domain
+                    );
+                }
+            } else {
+                // only override if not specified
+                if (certificate === null) {
+                    distributionCertificate.AcmCertificateArn = await getCertificateArn(
+                        this.serverless,
+                        this.options.domain
+                    );
+                }
+            }
+        }
     }
 
     prepareResources(resources) {
@@ -428,7 +461,7 @@ class ServerlessFullstackPlugin {
         if (certificate !== null) {
             this.serverless.cli.log(`Configuring SSL certificate...`);
             distributionConfig.ViewerCertificate.AcmCertificateArn = certificate;
-        } else {
+        } else if (!this.options.domain) {  // if domain is set certificate will either be created or found
             delete distributionConfig.ViewerCertificate;
         }
     }

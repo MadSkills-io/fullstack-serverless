@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add `route53` config parameter to manage domains and certifiactes automatically using route53
 
 ## [0.8.0] - 2021-1-28
 Thanks @pecirep, @miguel-a-calles-mba, @superandrew213

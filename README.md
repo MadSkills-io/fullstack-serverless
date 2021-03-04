@@ -58,6 +58,7 @@ custom:
   fullstack:
     domain: my-custom-domain.com
     certificate: arn:aws:acm:us-east-1:...     # The ARN for the SSL cert to use form AWS CertificateManager
+    route53: false                             # Use route53 to manage domains and certificates
     bucketName: webapp-deploy                  # Unique name for the S3 bucket to host the client assets
     distributionFolder: client/dist            # Path to the client assets to be uploaded to S3
     indexDocument: index.html                  # The index document to use
@@ -256,6 +257,26 @@ custom:
 ```
 
 The custom domain for your fullstack serverless app.
+
+---
+
+**route53**
+
+_optional_, default: `false`
+
+```yaml
+custom:
+  fullstack:
+    ...
+    route53: true
+    ...
+```
+
+Use this parameter if you want the plugin to manage domains via route53, including automatic SSL certificate requesting and validation (this means you can omit the `certificateArn` parameter).
+Note: if an issued SSL certificate for the requested domain(s) already exists in ACM, it will be reused.
+
+If one or more domains aren't managed by a Hosted Zone in your account, the required DNS entries will be written to the console.
+If there is no issued SSL certificate for all domains combined and one or more aren't managed by a Hosted Zone in your account, deployment will wait for the DNS entries to be added manually and the certificate to be issued.
 
 ---
 
