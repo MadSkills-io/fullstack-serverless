@@ -42,7 +42,7 @@ npm install --save-dev fullstack-serverless
 * All fullstack-serverless configuration parameters are optional - e.g. don't provide ACM Certificate ARN
   to use default CloudFront certificate (which works only for default cloudfront.net domain).
 * This plugin **does not create Route53 aliases** for the newly created CloudFront distribution automatically;
-  however, this is easily configured with the addition of a `AWS::Route53::RecordSetGroup` CloudFormation templating (provided below). 
+  however, this is easily configured with the addition of `AWS::Route53::RecordSetGroup` CloudFormation templating (provided below). 
   Alternatively, you may manually add Route53 ALIAS record pointing to your CloudFront domain name in the AWS console.
 * First deployment may be quite long (e.g. 10 min) as Serverless is waiting for
   CloudFormation to deploy CloudFront distribution.
