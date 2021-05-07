@@ -41,9 +41,9 @@ npm install --save-dev fullstack-serverless
 
 * All fullstack-serverless configuration parameters are optional - e.g. don't provide ACM Certificate ARN
   to use default CloudFront certificate (which works only for default cloudfront.net domain).
-* This plugin **does not** set-up automatically Route53 for newly created CloudFront distribution.
-  After creating CloudFront distribution, manually add Route53 ALIAS record pointing to your
-  CloudFront domain name.
+* This plugin **does not create Route53 aliases** for the newly created CloudFront distribution automatically;
+  however, this is easily configured with the addition of a `AWS::Route53::RecordSetGroup` CloudFormation templating (provided below). 
+  Alternatively, you may manually add Route53 ALIAS record pointing to your CloudFront domain name in the AWS console.
 * First deployment may be quite long (e.g. 10 min) as Serverless is waiting for
   CloudFormation to deploy CloudFront distribution.
 
@@ -78,6 +78,22 @@ custom:
     minimumProtocolVersion: TLSv1.2_2018
     priceClass: PriceClass_100
     noConfirm: false                           # Alternative to --no-confirm flag. Use this parameter if you do not want a confirmation prompt to interrupt automated builds.
+
+
+# Optionally add for automatic Route53 domain alias creation (all fields required)
+resources:
+  Resources:
+    WebsiteDNSName:
+      Type: AWS::Route53::RecordSetGroup
+      Properties:
+        HostedZoneId: Z0123456ABCDEFG # The hosted zone ID for your domain found within Route53
+        RecordSets:
+          - Name: my-custom-domain.com  
+            Type: A  # (Alias)
+            AliasTarget:
+              HostedZoneId: Z2FDTNDATAQYW2 # The static CloudFront Hosted Zone ID (do not change)
+              DNSName: !GetAtt [ApiDistribution, DomainName] # References the URL the fullstack plugin creates (do not change)
+              EvaluateTargetHealth: false # Advanced setting. See: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-complex-configs.html
 ```
 
 
@@ -253,6 +269,31 @@ custom:
     - my-custom-domain.com
     - secondary-custom-domain.com
     ...
+```
+
+To automatically create and configure Route53 aliases for multiple domains, the following can be added to `serverless.yml` at the root level:
+
+```yaml
+resources:
+  Resources:
+    WebsiteDNSName:
+      Type: AWS::Route53::RecordSetGroup
+      Properties:
+        HostedZoneId: Z0123456ABCDEFG 
+        RecordSets:
+          - Name: my-custom-domain.com  
+            Type: A
+            AliasTarget:
+              HostedZoneId: Z2FDTNDATAQYW2
+              DNSName: !GetAtt [ApiDistribution, DomainName] 
+              EvaluateTargetHealth: false
+          - Name: secondary-custom-domain.com 
+            Type: A
+            AliasTarget:
+              HostedZoneId: Z2FDTNDATAQYW2
+              DNSName: !GetAtt [ApiDistribution, DomainName] 
+              EvaluateTargetHealth: false
+          # Additions can be made to this list for all custom.fullstack.domain entries...
 ```
 
 The custom domain for your fullstack serverless app.
